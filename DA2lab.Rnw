@@ -1,0 +1,124 @@
+\documentclass{article}
+
+\title{ARIMA Modeling for Stock Data}
+\date{\today}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\maketitle
+
+\section*{Introduction}
+In this report, we perform ARIMA modeling on the stock market dataset, 
+considering past 5 years stock market data of Nestle and Britannia.
+
+\subsection*{}
+Load necessary libraries
+<<>>=
+library(tidyverse)
+library(forecast)
+library(lubridate)
+library(zoo)
+library(tseries)
+@
+
+\section*{STOCK 1: NESTLE}
+\subsection*{Step 1}
+\textbf{Data Preparation}
+The data must have two columns. First column will be of Date second will be the 
+stock price or the closing price of the day.
+<<>>=
+data1 <- read.csv("C://Users//Lenovo//Downloads//NEST Historical Data.csv")
+data1$Date <- as.Date(data1$Date, format = "%Y-%m-%d")
+data1$Price <- as.numeric(gsub(",", "", data1$Price))
+data1_monthly <- data1 %>%
+  mutate(YearMonth = floor_date(Date, "month")) %>%
+  group_by(YearMonth) %>%
+  summarize(AvgPrice = mean(Price))
+ts_data1 <- ts(data1_monthly$AvgPrice, start = c(2019, 8), frequency = 12)
+ts_data1
+
+@
+
+\textbf{ADF Test for Stationarity (Results)}
+<<>>=
+adf_test1 <- adf.test(ts_data1)
+print(adf_test1)
+@
+
+\textbf{Plot the Time Series}
+<<fig=TRUE, echo=FALSE>>=
+plot(ts_data1, main = "Nestle Data - Monthly Average Time Series", 
+     ylab = "Price", xlab = "Year-Month")
+@
+
+\subsection*{Step 2}
+\textbf{Model Selection using ARIMA model}
+<<>>=
+auto_arima1 <- auto.arima(ts_data1)
+summary(auto_arima1)
+@
+
+\subsection*{Step 3}
+\textbf{Forecasting for next 12 months}
+<<fig=TRUE, echo=FALSE>>=
+forecast1 <- forecast(auto_arima1, h = 12)
+plot(forecast1, main = "12-Month Forecast for Nestle Data", xlab = 
+       "Year-Month", ylab = "Price")
+@
+
+\subsection*{Step 4}
+\textbf{Model Diagnostics}
+<<fig=TRUE, echo=FALSE>>=
+checkresiduals(auto_arima1)
+@
+
+\section*{STOCK 2: BRITANNIA}
+\subsection*{Step 1}
+\textbf{Data Preparation}
+<<>>=
+data2 <- read.csv("C://Users//Lenovo//Downloads//BRIT Historical Data.csv")
+data2$Date <- as.Date(data2$Date, format = "%Y-%m-%d")
+data2$Price <- as.numeric(gsub(",", "", data2$Price))
+data2_monthly <- data2 %>%
+  mutate(YearMonth = floor_date(Date, "month")) %>%
+  group_by(YearMonth) %>%
+  summarize(AvgPrice = mean(Price))
+ts_data2 <- ts(data2_monthly$AvgPrice, start = c(2019, 8), frequency = 12)
+ts_data2
+@
+
+\textbf{ADF Test for Stationarity (Results)}
+<<>>=
+adf_test2 <- adf.test(ts_data2)
+print(adf_test2)
+@
+
+\textbf{Plot the Time Series}
+<<fig=TRUE, echo=FALSE>>=
+plot(ts_data2, main = "Britannia Data - Monthly Average Time Series", 
+     ylab = "Price", xlab = "Year-Month")
+@
+
+\subsection*{Step 2}
+\textbf{Model Selection using ARIMA model}
+<<>>=
+auto_arima2 <- auto.arima(ts_data2)
+summary(auto_arima2)
+@
+
+\subsection*{Step 3}
+\textbf{Forecasting for next 12 months}
+<<fig=TRUE, echo=FALSE>>=
+forecast2 <- forecast(auto_arima2, h = 12)
+plot(forecast2, main = "12-Month Forecast for Britannia Data", 
+     xlab = "Year-Month", ylab = "Price")
+@
+
+\subsection*{Step 4}
+\textbf{Model Diagnostics}
+<<fig=TRUE, echo=FALSE>>=
+checkresiduals(auto_arima2)
+@
+
+\end{document}
